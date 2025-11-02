@@ -123,10 +123,10 @@ const Clients = () => {
       <div className="card">
         <div className="table-header">
           <h3>All Clients ({clients.length})</h3>
-          <button className="btn btn-primary">
-            + Add New Client
-          </button>
-        </div>
+            <Link to="/clients/add" className="btn btn-primary"> 
+              + Add New Client
+            </Link>
+          </div>
 
         <div className="table-container">
           <table className="clients-table">
