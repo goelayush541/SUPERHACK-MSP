@@ -1,0 +1,163 @@
+.software-page .tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: var(--text-primary);
+}
+
+.tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.software-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.software-table th,
+.software-table td {
+  padding: 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.software-table th {
+  background: var(--background-color);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.software-info .software-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.software-info .software-category {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.utilization {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.utilization-bar {
+  width: 60px;
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.utilization-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.utilization-high {
+  background: var(--success-color);
+}
+
+.utilization-medium {
+  background: var(--warning-color);
+}
+
+.utilization-low {
+  background: var(--error-color);
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recommendation-item {
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--background-color);
+}
+
+.recommendation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.recommendation-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.recommendation-title h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.potential-savings {
+  background: var(--success-color);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.recommendation-description {
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.recommendation-suggestion {
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+}
+
+.recommendation-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.severity-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.severity-high {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.severity-medium {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.severity-low {
+  background: #f0f9ff;
+  color: #0369a1;
+}
