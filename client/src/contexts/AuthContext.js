@@ -3,9 +3,41 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-// Configure axios with better error handling
+// Configure axios with better error handling and dynamic API URL
+const getApiUrl = () => {
+  // Check for environment variable first
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  // Default to localhost for development
+  return 'http://localhost:5000';
+};
+
+const API_URL = getApiUrl();
 axios.defaults.baseURL = API_URL;
 axios.defaults.timeout = 10000;
+
+// Add request interceptor for better error handling
+axios.interceptors.request.use(
+  (config) => {
+    console.log(`Making API call to: ${config.url}`);
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for error handling
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -19,58 +51,55 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [backendOnline, setBackendOnline] = useState(false);
+  const [apiUrl, setApiUrl] = useState(API_URL);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     
-    // Check if backend is running
     const checkBackend = async () => {
       try {
-        // First, check if backend is accessible
-        await axios.get('/api/auth/health').catch(() => {
-          throw new Error('Backend not reachable');
-        });
-        
+        console.log(`Checking backend connectivity at: ${apiUrl}`);
+        await axios.get('/api/auth/health');
         setBackendOnline(true);
+        console.log('Backend is online');
         
-        // If we have a token and backend is online, verify user
         if (token) {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           try {
             const response = await axios.get('/api/auth/me');
             setUser(response.data);
-          } catch (error) {
-            console.error('Token verification failed:', error);
-            // Token is invalid, clear it
+            console.log('User authenticated successfully');
+          } catch (authError) {
+            console.log('Token invalid, clearing storage');
             localStorage.removeItem('token');
             delete axios.defaults.headers.common['Authorization'];
           }
         }
       } catch (error) {
         console.log('Backend not available, running in demo mode');
+        console.log('Error details:', error.message);
         setBackendOnline(false);
         
-        // Set demo user for presentation if we have a token
-        if (token) {
-          setUser({
-            _id: 'demo-user',
-            name: 'Demo User',
-            email: 'demo@msp.com',
-            role: 'admin',
-            department: 'Management'
-          });
-        }
+        // Set demo user for presentation
+        setUser({
+          _id: 'demo-user',
+          name: 'Demo User',
+          email: 'demo@msp.com',
+          role: 'admin',
+          department: 'Management'
+        });
       } finally {
         setLoading(false);
       }
     };
 
     checkBackend();
-  }, []);
+  }, [apiUrl]);
 
   const login = async (email, password) => {
     try {
       if (!backendOnline) {
+        console.log('Using demo mode login');
         // Demo mode login
         const demoUser = {
           _id: 'demo-user',
@@ -80,89 +109,85 @@ export const AuthProvider = ({ children }) => {
           department: 'Management',
           token: 'demo-token'
         };
-        
-        localStorage.setItem('token', 'demo-token');
         setUser(demoUser);
         return demoUser;
       }
 
+      console.log('Attempting login with backend');
       const response = await axios.post('/api/auth/login', { email, password });
       
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         setUser(response.data);
+        console.log('Login successful');
         return response.data;
       }
     } catch (error) {
       console.error('Login error:', error);
-      
-      // Provide user-friendly error messages
       if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
-        throw new Error('Backend server is not running. Please start the server or use demo mode.');
-      } else if (error.response?.status === 401) {
-        throw new Error('Invalid email or password');
-      } else if (error.response?.status === 400) {
-        throw new Error('Please check your input and try again');
-      } else {
-        throw new Error('Login failed. Please try again.');
+        const errorMsg = `Cannot connect to backend server at ${apiUrl}. Please ensure the server is running on port 5000.`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
       }
+      throw error;
     }
   };
 
   const register = async (userData) => {
     try {
       if (!backendOnline) {
+        console.log('Using demo mode registration');
         // Demo mode registration
         const demoUser = {
           _id: 'demo-user',
           name: userData.name,
           email: userData.email,
-          role: userData.role || 'it_team',
-          department: userData.department || 'IT Operations',
+          role: userData.role,
+          department: userData.department,
           token: 'demo-token'
         };
-        
-        localStorage.setItem('token', 'demo-token');
         setUser(demoUser);
         return demoUser;
       }
 
+      console.log('Attempting registration with backend');
       const response = await axios.post('/api/auth/register', userData);
       
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         setUser(response.data);
+        console.log('Registration successful');
         return response.data;
       }
     } catch (error) {
       console.error('Registration error:', error);
-      
-      // Provide user-friendly error messages
       if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
-        throw new Error('Backend server is not running. Please start the server or use demo mode.');
-      } else if (error.response?.status === 400) {
-        const errorMessage = error.response.data?.message || 'Registration failed';
-        throw new Error(errorMessage);
-      } else if (error.response?.status === 409) {
-        throw new Error('User already exists with this email');
-      } else {
-        throw new Error('Registration failed. Please try again.');
+        const errorMsg = `Cannot connect to backend server at ${apiUrl}. Please ensure the server is running on port 5000.`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
       }
+      throw error;
     }
   };
 
   const logout = () => {
+    console.log('Logging out user');
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
-    setBackendOnline(false);
   };
 
-  // Function to manually set backend status (useful for testing)
-  const setBackendStatus = (status) => {
-    setBackendOnline(status);
+  const checkBackendStatus = async () => {
+    try {
+      await axios.get('/api/auth/health');
+      setBackendOnline(true);
+      return true;
+    } catch (error) {
+      setBackendOnline(false);
+      return false;
+    }
   };
 
   const value = {
@@ -172,7 +197,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     backendOnline,
-    setBackendStatus
+    apiUrl,
+    checkBackendStatus
   };
 
   return (
