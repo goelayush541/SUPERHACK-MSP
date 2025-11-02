@@ -45,6 +45,7 @@ router.get('/:id', protect, async (req, res) => {
 
     res.json(client);
   } catch (error) {
+    console.error('Error fetching client:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -52,15 +53,46 @@ router.get('/:id', protect, async (req, res) => {
 // @desc    Create client
 // @route   POST /api/clients
 // @access  Private
+// @desc    Create a new client
+// @route   POST /api/clients
+// @access  Private
 router.post('/', protect, authorize('admin', 'manager', 'sales_agent'), async (req, res) => {
   try {
-    const client = await Client.create(req.body);
-    res.status(201).json(client);
+    console.log('Creating new client with data:', req.body);
+    
+    const client = new Client({
+      name: req.body.name,
+      email: req.body.email,
+      phone: req.body.phone,
+      industry: req.body.industry,
+      contractValue: req.body.contractValue || 0,
+      startDate: req.body.startDate || new Date(),
+      healthScore: req.body.healthScore || 75,
+      slaCompliance: req.body.slaCompliance || 90,
+      satisfactionScore: req.body.satisfactionScore || 80,
+      monthlyRevenue: req.body.monthlyRevenue || 0,
+      costToServe: req.body.costToServe || 0,
+      status: req.body.status || 'active',
+      tags: req.body.tags || []
+    });
+
+    const savedClient = await client.save();
+    console.log('Client created successfully:', savedClient._id);
+    
+    res.status(201).json(savedClient);
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error('Error creating client:', error);
+    
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        message: 'Validation Error', 
+        errors: Object.values(error.errors).map(e => e.message) 
+      });
+    }
+    
+    res.status(500).json({ message: error.message });
   }
 });
-
 // @desc    Update client
 // @route   PUT /api/clients/:id
 // @access  Private
@@ -78,6 +110,7 @@ router.put('/:id', protect, authorize('admin', 'manager', 'sales_agent'), async 
 
     res.json(client);
   } catch (error) {
+    console.error('Error updating client:', error);
     res.status(400).json({ message: error.message });
   }
 });
