@@ -1,9 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:5000';
-axios.defaults.timeout = 10000;
-
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -18,14 +15,19 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Set up axios interceptor for auth tokens
+  // Dynamic API URL based on environment
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  
   useEffect(() => {
+    // Configure axios
+    axios.defaults.baseURL = API_URL;
+    axios.defaults.timeout = 10000;
+
     const token = localStorage.getItem('token');
     if (token) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
 
-    // Check if user is logged in on app load
     const checkLoggedIn = async () => {
       try {
         if (token) {
@@ -42,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkLoggedIn();
-  }, []);
+  }, [API_URL]);
 
   const login = async (email, password) => {
     try {
@@ -63,6 +65,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await axios.post('/api/auth/register', userData);
+      
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
