@@ -12,6 +12,7 @@ import Sales from './pages/Sales';
 import AIInsights from './pages/AIInsights';
 import Reports from './pages/Reports';
 import Login from './pages/Login';
+import AddClient from './pages/AddClient';
 import Register from './pages/Register';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path="financial" element={<Financial />} />
           <Route path="software" element={<Software />} />
           <Route path="sales" element={<Sales />} />
+          <Route path="clients/add" element={<AddClient />} />
           <Route path="ai-insights" element={<AIInsights />} />
           <Route path="reports" element={<Reports />} />
         </Route>
