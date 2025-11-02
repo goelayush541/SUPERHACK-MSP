@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import './Clients.css'; // Reuse the same CSS
 
 const AddClient = () => {
   const [formData, setFormData] = useState({
@@ -9,7 +10,7 @@ const AddClient = () => {
     phone: '',
     industry: '',
     contractValue: '',
-    startDate: '',
+    startDate: new Date().toISOString().split('T')[0],
     healthScore: 75,
     slaCompliance: 95,
     satisfactionScore: 80,
@@ -18,11 +19,12 @@ const AddClient = () => {
     status: 'active'
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const industries = [
     'Technology',
-    'Healthcare',
+    'Healthcare', 
     'Finance',
     'Retail',
     'Manufacturing',
@@ -41,21 +43,33 @@ const AddClient = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
     
     try {
-      await axios.post('/api/clients', {
+      // Prepare the data for API
+      const clientData = {
         ...formData,
-        contractValue: Number(formData.contractValue),
-        monthlyRevenue: Number(formData.monthlyRevenue),
-        costToServe: Number(formData.costToServe),
-        startDate: new Date(formData.startDate)
-      });
+        contractValue: Number(formData.contractValue) || 0,
+        monthlyRevenue: Number(formData.monthlyRevenue) || 0,
+        costToServe: Number(formData.costToServe) || 0,
+        healthScore: Number(formData.healthScore),
+        slaCompliance: Number(formData.slaCompliance),
+        satisfactionScore: Number(formData.satisfactionScore),
+        startDate: formData.startDate ? new Date(formData.startDate) : new Date()
+      };
+
+      console.log('Sending client data:', clientData);
+
+      const response = await axios.post('/api/clients', clientData);
       
+      console.log('Client added successfully:', response.data);
       alert('Client added successfully!');
       navigate('/clients');
     } catch (error) {
       console.error('Error adding client:', error);
-      alert('Error adding client: ' + error.message);
+      const errorMessage = error.response?.data?.message || error.message || 'Unknown error occurred';
+      setError('Error adding client: ' + errorMessage);
+      alert('Error adding client: ' + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -64,17 +78,33 @@ const AddClient = () => {
   return (
     <div className="container">
       <div className="page-header">
-        <h1>Add New Client</h1>
+        <div className="header-content">
+          <h1>Add New Client</h1>
+          <button 
+            className="btn btn-outline"
+            onClick={() => navigate('/clients')}
+          >
+            ← Back to Clients
+          </button>
+        </div>
         <p className="text-muted">Register a new client to the MSP Growth Platform</p>
       </div>
+
+      {error && (
+        <div className="alert alert-error mb-4">
+          {error}
+        </div>
+      )}
 
       <div className="card">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-2">
+            {/* Client Basic Information */}
             <div className="form-group">
-              <label>Client Name *</label>
+              <label htmlFor="name">Client Name *</label>
               <input
                 type="text"
+                id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
@@ -84,9 +114,10 @@ const AddClient = () => {
             </div>
 
             <div className="form-group">
-              <label>Email</label>
+              <label htmlFor="email">Email</label>
               <input
                 type="email"
+                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -95,9 +126,10 @@ const AddClient = () => {
             </div>
 
             <div className="form-group">
-              <label>Phone</label>
+              <label htmlFor="phone">Phone</label>
               <input
                 type="tel"
+                id="phone"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
@@ -106,8 +138,9 @@ const AddClient = () => {
             </div>
 
             <div className="form-group">
-              <label>Industry</label>
+              <label htmlFor="industry">Industry</label>
               <select
+                id="industry"
                 name="industry"
                 value={formData.industry}
                 onChange={handleChange}
@@ -119,79 +152,114 @@ const AddClient = () => {
               </select>
             </div>
 
+            {/* Financial Information */}
             <div className="form-group">
-              <label>Contract Value ($) *</label>
+              <label htmlFor="contractValue">Contract Value ($) *</label>
               <input
                 type="number"
+                id="contractValue"
                 name="contractValue"
                 value={formData.contractValue}
                 onChange={handleChange}
                 required
                 placeholder="5000"
+                min="0"
+                step="100"
               />
             </div>
 
             <div className="form-group">
-              <label>Monthly Revenue ($)</label>
+              <label htmlFor="monthlyRevenue">Monthly Revenue ($)</label>
               <input
                 type="number"
+                id="monthlyRevenue"
                 name="monthlyRevenue"
                 value={formData.monthlyRevenue}
                 onChange={handleChange}
                 placeholder="2500"
+                min="0"
+                step="100"
               />
             </div>
 
             <div className="form-group">
-              <label>Cost to Serve ($)</label>
+              <label htmlFor="costToServe">Cost to Serve ($)</label>
               <input
                 type="number"
+                id="costToServe"
                 name="costToServe"
                 value={formData.costToServe}
                 onChange={handleChange}
                 placeholder="1500"
+                min="0"
+                step="100"
               />
             </div>
 
             <div className="form-group">
-              <label>Start Date</label>
+              <label htmlFor="startDate">Start Date</label>
               <input
                 type="date"
+                id="startDate"
                 name="startDate"
                 value={formData.startDate}
                 onChange={handleChange}
               />
             </div>
 
+            {/* Performance Metrics */}
             <div className="form-group">
-              <label>Health Score</label>
+              <label htmlFor="healthScore">
+                Health Score: {formData.healthScore}%
+              </label>
               <input
                 type="range"
+                id="healthScore"
                 name="healthScore"
                 min="0"
                 max="100"
                 value={formData.healthScore}
                 onChange={handleChange}
+                className="slider"
               />
-              <span>{formData.healthScore}%</span>
             </div>
 
             <div className="form-group">
-              <label>SLA Compliance</label>
+              <label htmlFor="slaCompliance">
+                SLA Compliance: {formData.slaCompliance}%
+              </label>
               <input
                 type="range"
+                id="slaCompliance"
                 name="slaCompliance"
                 min="0"
                 max="100"
                 value={formData.slaCompliance}
                 onChange={handleChange}
+                className="slider"
               />
-              <span>{formData.slaCompliance}%</span>
             </div>
 
             <div className="form-group">
-              <label>Status</label>
+              <label htmlFor="satisfactionScore">
+                Satisfaction Score: {formData.satisfactionScore}%
+              </label>
+              <input
+                type="range"
+                id="satisfactionScore"
+                name="satisfactionScore"
+                min="0"
+                max="100"
+                value={formData.satisfactionScore}
+                onChange={handleChange}
+                className="slider"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="status">Status</label>
               <select
+                id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
@@ -203,11 +271,19 @@ const AddClient = () => {
             </div>
           </div>
 
-          <div className="form-actions">
+          <div className="form-actions" style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            justifyContent: 'flex-end',
+            marginTop: '24px',
+            paddingTop: '24px',
+            borderTop: '1px solid var(--border-color)'
+          }}>
             <button
               type="button"
               className="btn btn-outline"
               onClick={() => navigate('/clients')}
+              disabled={loading}
             >
               Cancel
             </button>
